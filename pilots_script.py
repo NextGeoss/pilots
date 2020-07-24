@@ -68,8 +68,11 @@ class Pilots(object):
 
     def update_pilot_information(self, pilot_name, path_to_file):
         self.new_pilot = False
+        print pilot_name
         # check if the pilot exists on the portal
         pilot = requests.get(self.ckan_url + '/api/action/group_show?id=' + pilot_name, verify=False)
+        print pilot
+
         pilot_info = json.loads(pilot.content)
 
         if pilot_info['success'] == True:
@@ -171,23 +174,28 @@ class Pilots(object):
                 item.append({'key': 'extent', 'value': coord.strip()})
 
             # Resources
-            no_of_resources = 0
+            # item_resource_node = item_node.find('MD_DigitalTransferOptions')
+            # print item_resource_node
+
+            # for i in item_resource_node.find_all('CI_OnlineResource'):
+            #     print i
+            no_resources = 0
             resource_data = {'linkage', 'name', 'description'}
-            no_resources = len(item_node.find_all('CI_OnlineResource'))
-            item.append({'key': 'no_resources', 'value': no_resources})
-            item_tmp =[]
 
-            for resource in item_node.find_all('CI_OnlineResource'):
-                item_resource = []
-                for r in resource.findChildren():
-                    key = r.name
-                    value = r.text
+            for it in item_node.find_all('MD_DigitalTransferOptions'):
+                for resource in it.findChildren():
+                    item_resource = []
+                    if resource.name == 'CI_OnlineResource':
+                        for a in resource.findChildren():
+                            if a.name in resource_data:
+                                key = a.name
+                                value = a.text
 
-                    if key in resource_data:
-                        item_resource.append({'key': key, 'value': value})
+                                item_resource.append({'key': key, 'value': value})
 
-                item.append({'key': 'resource_' +  str(no_resources), 'value': str(item_resource)})
-                no_resources -= 1
+                        item.append({'key': 'resource_' +  str(no_resources), 'value': str(item_resource)})
+                        no_resources += 1
+
 
 
         item.append({'key': 'language', 'value': 'English'})
